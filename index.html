@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MagicSchool Email Generator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f5f5; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .header { margin-bottom: 30px; }
+    .header h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; color: #1a1a1a; }
+    .header p { margin: 0; font-size: 14px; color: #666; }
+    .main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #e0e0e0; }
+    .tab-btn { background: none; border: none; padding: 10px 16px; color: #666; font-size: 14px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab-btn.active { color: #4B0082; border-bottom-color: #4B0082; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 16px; }
+    .label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+    input[type="text"], input[type="email"], input[type="date"], select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, select:focus, textarea:focus { outline: none; border-color: #4B0082; box-shadow: 0 0 0 3px rgba(75, 0, 130, 0.1); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .checkbox-group { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+    .checkbox-group label { cursor: pointer; font-size: 14px; }
+    .session-card { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-bottom: 12px; }
+    .session-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .session-header span { font-weight: 600; font-size: 14px; }
+    .btn { padding: 10px 16px; border-radius: 6px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: #4B0082; color: white; }
+    .btn-primary:hover { background: #33116F; }
+    .btn-secondary { background: none; border: 1px solid #ddd; color: #333; }
+    .btn-secondary:hover { background: #f5f5f5; }
+    .btn-danger { background: none; border: 1px solid #e74c3c; color: #e74c3c; font-size: 13px; }
+    .btn-danger:hover { background: rgba(231, 76, 60, 0.05); }
+    .btn-copy { background: #4B0082; color: white; width: 100%; margin-top: 20px; }
+    .preview-frame { width: 100%; height: 700px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+    .section-divider { margin: 24px 0 12px; font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+    @media (max-width: 1200px) { .main { grid-template-columns: 1fr; } .preview-frame { height: 600px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>MagicSchool Email Generator</h1>
+      <p>Build professional PD confirmation emails in seconds</p>
+    </div>
+
+    <div class="main">
+      <!-- Editor Panel -->
+      <div class="card">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('editor')">Editor</button>
+          <button class="tab-btn" onclick="switchTab('help')">Help</button>
+        </div>
+
+        <div id="editor" class="tab-content active">
+          <div class="form-group">
+            <label class="label">Recipient name</label>
+            <input type="text" id="recipientName" placeholder="e.g., Jon, Karen, Rebecca" onchange="generatePreview()">
+          </div>
+
+          <div class="form-group">
+            <label class="label">Recipient email</label>
+            <input type="email" id="recipientEmail" placeholder="e.g., jon@example.com" onchange="generatePreview()">
+          </div>
+
+          <div class="form-group">
+            <label class="label">School or district name</label>
+            <input type="text" id="orgName" placeholder="e.g., Excelsior Charter Schools" onchange="generatePreview()">
+          </div>
+
+          <div class="form-group">
+            <label class="label">Organization type</label>
+            <div class="checkbox-group">
+              <input type="checkbox" id="isDistrict" onchange="generatePreview()">
+              <label for="isDistrict">District, ISD, USD, or multi-school org (use "district's priorities")</label>
+            </div>
+          </div>
+
+          <div class="section-divider">Sessions</div>
+          <div id="sessionsContainer"></div>
+          <button class="btn btn-secondary" onclick="addSession()" style="width: 100%; margin-bottom: 20px;">+ Add Session</button>
+
+          <div class="section-divider">Options</div>
+          <div class="form-group">
+            <label class="label">Include "Next Steps" section?</label>
+            <div class="checkbox-group">
+              <input type="checkbox" id="includeNextSteps" checked onchange="generatePreview()">
+              <label for="includeNextSteps">Yes (recommended for in-person)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="label">CSM email (optional)</label>
+            <input type="email" id="csmEmail" placeholder="e.g., cdr@magicschool.ai" onchange="generatePreview()">
+          </div>
+
+          <button class="btn btn-copy" onclick="copyHTML()">Copy Email HTML</button>
+        </div>
+
+        <div id="help" class="tab-content">
+          <h3 style="margin-top: 0;">Quick Guide</h3>
+          <ul style="font-size: 13px; line-height: 1.8; color: #555;">
+            <li><strong>Recipient name:</strong> First name only (e.g., "Jon" not "Jon McKinney")</li>
+            <li><strong>Format:</strong> Virtual = Google Meet link; In-Person = Location address</li>
+            <li><strong>Multi-session:</strong> Add multiple sessions; headers auto-separate by date/facilitator</li>
+            <li><strong>Next Steps:</strong> Usually on for in-person, off for virtual updates</li>
+            <li><strong>Copy HTML:</strong> Paste directly into Gmail or Outlook</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Preview Panel -->
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 20px; border-bottom: 1px solid #e0e0e0;">
+          <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Live Preview</h3>
+        </div>
+        <iframe id="previewFrame" class="preview-frame" style="border: none; border-top: 1px solid #e0e0e0;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sessions = [{ date: '', time: '', title: '', facilitator: '', format: 'Virtual', audience: '', location: '', link: '' }];
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+      if (tab === 'preview') generatePreview();
+    }
+
+    function addSession() {
+      sessions.push({ date: '', time: '', title: '', facilitator: '', format: 'Virtual', audience: '', location: '', link: '' });
+      renderSessions();
+    }
+
+    function removeSession(idx) {
+      sessions.splice(idx, 1);
+      renderSessions();
+      generatePreview();
+    }
+
+    function updateSession(idx, field, value) {
+      sessions[idx][field] = value;
+      generatePreview();
+    }
+
+    function renderSessions() {
+      const container = document.getElementById('sessionsContainer');
+      container.innerHTML = sessions.map((s, idx) => `
+        <div class="session-card">
+          <div class="session-header">
+            <span>Session ${idx + 1}</span>
+            ${sessions.length > 1 ? `<button class="btn btn-danger" onclick="removeSession(${idx})">Remove</button>` : ''}
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="label">Date</label>
+              <input type="date" value="${s.date}" onchange="updateSession(${idx}, 'date', this.value)">
+            </div>
+            <div class="form-group">
+              <label class="label">Time</label>
+              <input type="text" value="${s.time}" placeholder="e.g., 1:00–2:00 PM" onchange="updateSession(${idx}, 'time', this.value)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">Session title</label>
+            <input type="text" value="${s.title}" placeholder="e.g., MagicSchool for Teachers" onchange="updateSession(${idx}, 'title', this.value)">
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="label">Facilitator</label>
+              <input type="text" value="${s.facilitator}" placeholder="e.g., Meg Goliday" onchange="updateSession(${idx}, 'facilitator', this.value)">
+            </div>
+            <div class="form-group">
+              <label class="label">Format</label>
+              <select onchange="updateSession(${idx}, 'format', this.value)">
+                <option ${s.format === 'Virtual' ? 'selected' : ''}>Virtual</option>
+                <option ${s.format === 'In-Person' ? 'selected' : ''}>In-Person</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">Audience</label>
+            <input type="text" value="${s.audience}" placeholder="e.g., K–12 Teachers, Instructional Staff" onchange="updateSession(${idx}, 'audience', this.value)">
+          </div>
+          ${s.format === 'Virtual' ? `
+            <div class="form-group">
+              <label class="label">Session link</label>
+              <input type="text" value="${s.link}" placeholder="e.g., meet.google.com/abc-def-ghi" onchange="updateSession(${idx}, 'link', this.value)">
+            </div>
+          ` : ''}
+          ${s.format === 'In-Person' ? `
+            <div class="form-group">
+              <label class="label">Location</label>
+              <input type="text" value="${s.location}" placeholder="e.g., Building A, Room 101 or full address" onchange="updateSession(${idx}, 'location', this.value)">
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr + 'T00:00:00');
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    }
+
+    function generatePreview() {
+      const recipientName = document.getElementById('recipientName').value;
+      const orgName = document.getElementById('orgName').value;
+      const isDistrict = document.getElementById('isDistrict').checked;
+      const prioritiesText = isDistrict ? "district's priorities" : "school's priorities";
+      const includeNextSteps = document.getElementById('includeNextSteps').checked;
+
+      let sessionHTML = sessions.filter(s => s.date && s.title).map((s, idx) => {
+        const formattedDate = formatDate(s.date);
+        const dayOfWeek = new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+        const sessionHeader = sessions.length > 1 ? `${dayOfWeek}, ${s.date.split('-').reverse().join('/')} — ${s.facilitator || '[Facilitator TBD]'}` : formattedDate;
+
+        return `
+          <div style="font-size:22px; font-weight:700; color:#762BFA; margin:18px 0 6px; padding-bottom:4px; border-bottom:2px solid #4B0082;">${sessionHeader}</div>
+          <ul style="margin:0 0 16px; padding-left:20px;">
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Time:</strong> ${s.time || '[Please confirm]'}</li>
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Format:</strong> ${s.format}</li>
+            ${s.format === 'Virtual' ? `<li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Session Link:</strong> <a href="https://${s.link}" target="_blank" style="color:#4B0082; text-decoration:underline;">${s.link || '[Please add link]'}</a></li>` : ''}
+            ${s.format === 'In-Person' ? `<li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Location:</strong> ${s.location || '[Please provide]'}</li>` : ''}
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Session:</strong> ${s.title}</li>
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Facilitator:</strong> ${s.facilitator || '[Facilitator TBD]'}</li>
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Audience:</strong> ${s.audience || '[Please specify]'}</li>
+          </ul>
+        `;
+      }).join('');
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Confirmation Email</title>
+</head>
+<body style="margin:0; padding:0; background:#ffffff; font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:620px; margin:0 auto; background:#ffffff;">
+    <div style="padding:20px 36px 24px;">
+      <p style="margin:0 0 14px; font-size:15px; color:#1b1b1b;">Hi ${recipientName || '[Recipient Name]'},</p>
+      <p style="margin:0 0 18px; font-size:15px; line-height:1.75; color:#1b1b1b;">We're excited to partner with you for your upcoming MagicSchool professional learning for ${orgName || '[Organization]'}! Our goal is to make this experience practical, empowering, and aligned with your ${prioritiesText}. Please take a moment to review the details below and let us know if any updates or adjustments are needed.</p>
+      ${sessionHTML}
+      ${includeNextSteps ? `
+      <div style="font-size:22px; font-weight:700; color:#762BFA; margin:18px 0 6px; padding-bottom:4px; border-bottom:2px solid #4B0082;">Next Steps</div>
+      <ul style="margin:0 0 2px; padding-left:20px;">
+        <li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;">We'll be reaching out soon to schedule a planning call to finalize session content and any additional details.</li>
+        <li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;">If you need to make any adjustments or have any questions in the meantime, please don't hesitate to reach out; we're happy to help!</li>
+      </ul>
+      ` : ''}
+      <div style="font-size:22px; font-weight:700; color:#762BFA; margin:18px 0 6px; padding-bottom:4px; border-bottom:2px solid #4B0082;">Professional Learning &amp; Resources</div>
+      <ul style="margin:0 0 2px; padding-left:20px;">
+        <li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;"><a href="https://go.magicschool.ai/safe-student-facing-ai" target="_blank" style="color:#4B0082; text-decoration:underline; font-weight:600;">Our white paper</a> outlining MagicSchool's safe, learning-focused AI design</li>
+        <li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;"><a href="https://www.magicschool.ai/professional-development" target="_blank" style="color:#4B0082; text-decoration:underline; font-weight:600;">Professional Learning Materials</a>: slide decks, one-pagers, and curated YouTube playlists</li>
+        <li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;">Optional <a href="https://www.magicschool.ai/certification-courses#Educators" target="_blank" style="color:#4B0082; text-decoration:underline; font-weight:600;">self-paced certification courses</a>: for continued growth</li>
+      </ul>
+      <p style="margin:24px 0 0; font-size:15px; line-height:1.75; color:#1b1b1b;">We're looking forward to supporting your team in ways that feel energizing, thoughtful, and immediately useful in the classroom.</p>
+      <p style="margin:16px 0 0; font-size:15px; color:#1b1b1b;">In partnership,</p>
+      <p style="margin:16px 0 0; font-size:15px; font-weight:700; color:#33116F;">Amanda + The MagicSchool Professional Learning Team 🪄</p>
+    </div>
+    <div style="background:#33116F; padding:14px 36px; font-size:11px; color:#D8C1FF; text-align:center; letter-spacing:0.3px;">
+      magicschool.ai &nbsp;·&nbsp; Professional Learning Team
+    </div>
+  </div>
+</body>
+</html>
+      `;
+
+      const frame = document.getElementById('previewFrame');
+      frame.srcdoc = html;
+    }
+
+    function copyHTML() {
+      const recipientName = document.getElementById('recipientName').value;
+      const orgName = document.getElementById('orgName').value;
+      const isDistrict = document.getElementById('isDistrict').checked;
+      const prioritiesText = isDistrict ? "district's priorities" : "school's priorities";
+      const includeNextSteps = document.getElementById('includeNextSteps').checked;
+
+      let sessionHTML = sessions.filter(s => s.date && s.title).map((s, idx) => {
+        const formattedDate = formatDate(s.date);
+        const dayOfWeek = new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+        const sessionHeader = sessions.length > 1 ? `${dayOfWeek}, ${s.date.split('-').reverse().join('/')} — ${s.facilitator || '[Facilitator TBD]'}` : formattedDate;
+
+        return `
+          <div style="font-size:22px; font-weight:700; color:#762BFA; margin:18px 0 6px; padding-bottom:4px; border-bottom:2px solid #4B0082;">${sessionHeader}</div>
+          <ul style="margin:0 0 16px; padding-left:20px;">
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Time:</strong> ${s.time || '[Please confirm]'}</li>
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Format:</strong> ${s.format}</li>
+            ${s.format === 'Virtual' ? `<li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Session Link:</strong> <a href="https://${s.link}" target="_blank" style="color:#4B0082; text-decoration:underline;">${s.link || '[Please add link]'}</a></li>` : ''}
+            ${s.format === 'In-Person' ? `<li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Location:</strong> ${s.location || '[Please provide]'}</li>` : ''}
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Session:</strong> ${s.title}</li>
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Facilitator:</strong> ${s.facilitator || '[Facilitator TBD]'}</li>
+            <li style="margin-bottom:0; font-size:15px; line-height:1.5; color:#1b1b1b;"><strong style="color:#33116F;">Audience:</strong> ${s.audience || '[Please specify]'}</li>
+          </ul>
+        `;
+      }).join('');
+
+      const html = `<div style="background:#ffffff; font-family:Arial,Helvetica,sans-serif; max-width:620px;">
+<div style="padding:20px 36px 24px;">
+<p style="margin:0 0 14px; font-size:15px; color:#1b1b1b;">Hi ${recipientName || '[Recipient Name]'},</p>
+<p style="margin:0 0 18px; font-size:15px; line-height:1.75; color:#1b1b1b;">We're excited to partner with you for your upcoming MagicSchool professional learning for ${orgName || '[Organization]'}! Our goal is to make this experience practical, empowering, and aligned with your ${prioritiesText}. Please take a moment to review the details below and let us know if any updates or adjustments are needed.</p>
+${sessionHTML}
+${includeNextSteps ? `<div style="font-size:22px; font-weight:700; color:#762BFA; margin:18px 0 6px; padding-bottom:4px; border-bottom:2px solid #4B0082;">Next Steps</div><ul style="margin:0 0 2px; padding-left:20px;"><li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;">We'll be reaching out soon to schedule a planning call to finalize session content and any additional details.</li><li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;">If you need to make any adjustments or have any questions in the meantime, please don't hesitate to reach out; we're happy to help!</li></ul>` : ''}
+<div style="font-size:22px; font-weight:700; color:#762BFA; margin:18px 0 6px; padding-bottom:4px; border-bottom:2px solid #4B0082;">Professional Learning &amp; Resources</div>
+<ul style="margin:0 0 2px; padding-left:20px;"><li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;"><a href="https://go.magicschool.ai/safe-student-facing-ai" target="_blank" style="color:#4B0082; text-decoration:underline; font-weight:600;">Our white paper</a> outlining MagicSchool's safe, learning-focused AI design</li><li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;"><a href="https://www.magicschool.ai/professional-development" target="_blank" style="color:#4B0082; text-decoration:underline; font-weight:600;">Professional Learning Materials</a>: slide decks, one-pagers, and curated YouTube playlists</li><li style="margin-bottom:0; font-size:15px; line-height:1.6; color:#1b1b1b;">Optional <a href="https://www.magicschool.ai/certification-courses#Educators" target="_blank" style="color:#4B0082; text-decoration:underline; font-weight:600;">self-paced certification courses</a>: for continued growth</li></ul>
+<p style="margin:24px 0 0; font-size:15px; line-height:1.75; color:#1b1b1b;">We're looking forward to supporting your team in ways that feel energizing, thoughtful, and immediately useful in the classroom.</p>
+<p style="margin:16px 0 0; font-size:15px; color:#1b1b1b;">In partnership,</p>
+<p style="margin:16px 0 0; font-size:15px; font-weight:700; color:#33116F;">Amanda + The MagicSchool Professional Learning Team 🪄</p>
+</div>
+<div style="background:#33116F; padding:14px 36px; font-size:11px; color:#D8C1FF; text-align:center; letter-spacing:0.3px;">magicschool.ai &nbsp;·&nbsp; Professional Learning Team</div>
+</div>`;
+
+      navigator.clipboard.writeText(html).then(() => {
+        alert('✅ Email HTML copied to clipboard!\n\nPaste directly into Gmail or Outlook.');
+      });
+    }
+
+    renderSessions();
+    generatePreview();
+  </script>
+</body>
+</html>
